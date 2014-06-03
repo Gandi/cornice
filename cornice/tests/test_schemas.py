@@ -71,6 +71,10 @@ if COLANDER:
         bar = SchemaNode(String(), type='str', location="querystring",
                          default='bar')
 
+    class NestedSchema(MappingSchema):
+        egg = StrictSchema(location='querystring')
+        ham = StrictSchema(location='body')
+
     imperative_schema = SchemaNode(Mapping())
     imperative_schema.add(SchemaNode(String(), name='foo', type='str'))
     imperative_schema.add(SchemaNode(String(), name='bar', type='str',
@@ -250,6 +254,25 @@ if COLANDER:
             self.assertEqual(len(errors), 0)
             self.assertEqual(len(qs_fields), 2)
 
-            expected = {'foo': 'test', 'bar': 'test'}
+        def test_colander_nested_schema(self):
+            """
+            Schema could contains default values
+            """
+            schema = CorniceSchema.from_colander(NestedSchema)
+
+            dummy_request = MockRequest('{"ham": {"bar": "POST"}}',
+                                        {'egg.bar': 'GET'})
+            setattr(dummy_request, 'errors', Errors(dummy_request))
+            validate_colander_schema(schema, dummy_request)
+
+            qs_fields = schema.get_attributes(location="querystring")
+
+            errors = dummy_request.errors
+            self.assertEqual(len(errors), 0, errors)
+            self.assertEqual(len(qs_fields), 1)
+
+            expected = {'egg': {'bar': 'GET'},
+                        'ham': {'bar': 'POST'},
+                        }
 
             self.assertEqual(expected, dummy_request.validated)
