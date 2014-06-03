@@ -240,7 +240,6 @@ if COLANDER:
 
             self.assertEqual(expected, dummy_request.validated)
 
-
             dummy_request = MockRequest('', {'bar': 'test', 'foo': 'test'})
             setattr(dummy_request, 'errors', Errors(dummy_request))
             validate_colander_schema(schema, dummy_request)
